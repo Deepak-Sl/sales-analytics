@@ -29,7 +29,7 @@ const Dashboard = () => {
 
   const fetchSales = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/sales");
+      const res = await axios.get("https://sales-dashboard-backend.onrender.com/api/sales");
       setSales(res.data);
     } catch (err) {
       console.error("Error fetching sales:", err);
@@ -45,7 +45,7 @@ const Dashboard = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post("http://localhost:5000/api/sales", {
+      const res = await axios.post("https://sales-dashboard-backend.onrender.com/api/sales", {
         ...newSale,
         amount: Number(newSale.amount)
       });
