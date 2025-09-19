@@ -13,6 +13,8 @@ import {
   ResponsiveContainer
 } from "recharts";
 
+const BACKEND_URL = "https://sales-analytics-backend-qb0d.onrender.com"; // deployed backend URL
+
 const Dashboard = () => {
   const [sales, setSales] = useState([]);
   const [newSale, setNewSale] = useState({
@@ -21,8 +23,6 @@ const Dashboard = () => {
     date: "",
     region: ""
   });
-
-  const BACKEND_URL = "https://sales-analytics-backend-qb0d.onrender.com";
 
   // Fetch sales from backend
   useEffect(() => {
@@ -143,7 +143,7 @@ const Dashboard = () => {
           </thead>
           <tbody>
             {sales.map((sale) => (
-              <tr key={sale._id}>
+              <tr key={sale.id}>
                 <td>{sale.product}</td>
                 <td>{sale.amount}</td>
                 <td>{new Date(sale.date).toLocaleDateString()}</td>

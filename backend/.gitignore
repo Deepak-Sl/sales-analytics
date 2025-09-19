@@ -1,2 +1,11 @@
+# Node modules
 node_modules/
+
+# SQLite database
+sales.db
+
+# Logs
+*.log
+
+# Env files
 .env

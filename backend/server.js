@@ -1,59 +1,60 @@
 const express = require("express");
-const mongoose = require("mongoose");
+const sqlite3 = require("sqlite3").verbose();
 const cors = require("cors");
-require("dotenv").config(); // Load environment variables
+const bodyParser = require("body-parser");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors({
-  origin: "https://sales-analytics-inwg.vercel.app/"
-}));
-app.use(express.json()); // body-parser
+app.use(cors());
+app.use(bodyParser.json());
 
-// MongoDB connection using environment variable
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => console.log("✅ MongoDB connected"))
-.catch((err) => console.error("❌ MongoDB connection error:", err));
-
-// Sales Schema
-const saleSchema = new mongoose.Schema({
-  product: String,
-  amount: Number,
-  date: Date,
-  region: String,
+// SQLite DB connection
+const db = new sqlite3.Database("./sales.db", (err) => {
+  if (err) console.error("❌ DB connection error:", err.message);
+  else console.log("✅ SQLite DB connected");
 });
 
-const Sale = mongoose.model("Sale", saleSchema);
+// Create sales table if not exists
+db.run(`CREATE TABLE IF NOT EXISTS sales (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  product TEXT NOT NULL,
+  amount INTEGER NOT NULL,
+  date TEXT NOT NULL,
+  region TEXT NOT NULL
+)`);
 
-// Routes
-app.get("/api/sales", async (req, res) => {
-  try {
-    const sales = await Sale.find();
-    res.json(sales);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+// GET all sales (optional date filter)
+app.get("/api/sales", (req, res) => {
+  const { startDate, endDate } = req.query;
+  let query = "SELECT * FROM sales";
+  const params = [];
+  if (startDate && endDate) {
+    query += " WHERE date BETWEEN ? AND ?";
+    params.push(startDate, endDate);
   }
+  db.all(query, params, (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows);
+  });
 });
 
-app.post("/api/sales", async (req, res) => {
-  try {
-    const newSale = new Sale(req.body);
-    await newSale.save();
-    res.json(newSale);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+// POST add new sale
+app.post("/api/sales", (req, res) => {
+  const { product, amount, date, region } = req.body;
+  db.run(
+    "INSERT INTO sales (product, amount, date, region) VALUES (?, ?, ?, ?)",
+    [product, amount, date, region],
+    function(err) {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ id: this.lastID, product, amount, date, region });
+    }
+  );
 });
 
-// Optional test route
-app.get("/", (req, res) => {
-  res.send("🚀 Server is running and connected to MongoDB!");
-});
+// Test route
+app.get("/", (req, res) => res.send("SQL backend running!"));
 
-// Start the server
+// Start server
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
