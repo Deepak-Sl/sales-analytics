@@ -22,6 +22,8 @@ const Dashboard = () => {
     region: ""
   });
 
+  const BACKEND_URL = "https://sales-analytics-backend-qb0d.onrender.com";
+
   // Fetch sales from backend
   useEffect(() => {
     fetchSales();
@@ -29,7 +31,7 @@ const Dashboard = () => {
 
   const fetchSales = async () => {
     try {
-      const res = await axios.get("https://sales-dashboard-backend.onrender.com/api/sales");
+      const res = await axios.get(`${BACKEND_URL}/api/sales`);
       setSales(res.data);
     } catch (err) {
       console.error("Error fetching sales:", err);
@@ -45,7 +47,7 @@ const Dashboard = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post("https://sales-dashboard-backend.onrender.com/api/sales", {
+      const res = await axios.post(`${BACKEND_URL}/api/sales`, {
         ...newSale,
         amount: Number(newSale.amount)
       });

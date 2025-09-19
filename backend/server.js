@@ -7,8 +7,10 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors());
-app.use(express.json()); // replaces body-parser
+app.use(cors({
+  origin: "https://sales-analytics-inwg.vercel.app/"
+}));
+app.use(express.json()); // body-parser
 
 // MongoDB connection using environment variable
 mongoose.connect(process.env.MONGO_URI, {
