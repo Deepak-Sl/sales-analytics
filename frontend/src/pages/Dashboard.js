@@ -13,7 +13,7 @@ import {
   ResponsiveContainer
 } from "recharts";
 
-const BACKEND_URL = "https://sales-analytics-bd.onrender.com/"; // backend URL
+const BACKEND_URL = "https://sales-analytics-bd.onrender.com"; // backend URL
 
 const Dashboard = () => {
   const [sales, setSales] = useState([]);
