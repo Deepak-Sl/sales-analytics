@@ -1,60 +1,40 @@
 const express = require("express");
-const sqlite3 = require("sqlite3").verbose();
 const cors = require("cors");
-const bodyParser = require("body-parser");
+const pool = require("./db");
+require("dotenv").config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
-
-// Middleware
 app.use(cors());
-app.use(bodyParser.json());
+app.use(express.json());
 
-// SQLite DB connection
-const db = new sqlite3.Database("./sales.db", (err) => {
-  if (err) console.error("❌ DB connection error:", err.message);
-  else console.log("✅ SQLite DB connected");
-});
-
-// Create sales table if not exists
-db.run(`CREATE TABLE IF NOT EXISTS sales (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  product TEXT NOT NULL,
-  amount INTEGER NOT NULL,
-  date TEXT NOT NULL,
-  region TEXT NOT NULL
-)`);
-
-// GET all sales (optional date filter)
-app.get("/api/sales", (req, res) => {
-  const { startDate, endDate } = req.query;
-  let query = "SELECT * FROM sales";
-  const params = [];
-  if (startDate && endDate) {
-    query += " WHERE date BETWEEN ? AND ?";
-    params.push(startDate, endDate);
+// Add new sale
+app.post("/api/sales", async (req, res) => {
+  const { product_name, price, sale_date, region } = req.body;
+  try {
+    const result = await pool.query(
+      `INSERT INTO sales (product_name, price, sale_date, region)
+       VALUES ($1, $2, $3, $4) RETURNING *`,
+      [product_name, price, sale_date, region]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server error");
   }
-  db.all(query, params, (err, rows) => {
-    if (err) return res.status(500).json({ error: err.message });
-    res.json(rows);
-  });
 });
 
-// POST add new sale
-app.post("/api/sales", (req, res) => {
-  const { product, amount, date, region } = req.body;
-  db.run(
-    "INSERT INTO sales (product, amount, date, region) VALUES (?, ?, ?, ?)",
-    [product, amount, date, region],
-    function(err) {
-      if (err) return res.status(500).json({ error: err.message });
-      res.json({ id: this.lastID, product, amount, date, region });
-    }
-  );
+// Get all sales
+app.get("/api/sales", async (req, res) => {
+  try {
+    const result = await pool.query(
+      "SELECT * FROM sales ORDER BY sale_date DESC"
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server error");
+  }
 });
 
-// Test route
-app.get("/", (req, res) => res.send("SQL backend running!"));
-
-// Start server
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

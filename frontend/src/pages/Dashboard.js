@@ -13,14 +13,14 @@ import {
   ResponsiveContainer
 } from "recharts";
 
-const BACKEND_URL = "https://sales-analytics-backend-qb0d.onrender.com"; // deployed backend URL
+const BACKEND_URL = "http://localhost:5000"; // local backend URL
 
 const Dashboard = () => {
   const [sales, setSales] = useState([]);
   const [newSale, setNewSale] = useState({
-    product: "",
-    amount: "",
-    date: "",
+    product_name: "",
+    price: "",
+    sale_date: "",
     region: ""
   });
 
@@ -49,21 +49,24 @@ const Dashboard = () => {
     try {
       const res = await axios.post(`${BACKEND_URL}/api/sales`, {
         ...newSale,
-        amount: Number(newSale.amount)
+        price: Number(newSale.price)
       });
       setSales([...sales, res.data]);
-      setNewSale({ product: "", amount: "", date: "", region: "" });
+      setNewSale({ product_name: "", price: "", sale_date: "", region: "" });
     } catch (err) {
       console.error("Error adding sale:", err);
     }
   };
 
-  const totalSales = sales.reduce((sum, sale) => sum + sale.amount, 0);
+  const totalSales = sales.reduce((sum, sale) => sum + Number(sale.price), 0);
   const totalOrders = sales.length;
 
   const chartData = sales
-    .sort((a, b) => new Date(a.date) - new Date(b.date))
-    .map(sale => ({ date: new Date(sale.date).toLocaleDateString(), amount: sale.amount }));
+    .sort((a, b) => new Date(a.sale_date) - new Date(b.sale_date))
+    .map((sale) => ({
+      date: new Date(sale.sale_date).toLocaleDateString(),
+      amount: Number(sale.price)
+    }));
 
   return (
     <div className="dashboard-container">
@@ -81,24 +84,24 @@ const Dashboard = () => {
         <form onSubmit={handleSubmit}>
           <input
             type="text"
-            name="product"
+            name="product_name"
             placeholder="Product"
-            value={newSale.product}
+            value={newSale.product_name}
             onChange={handleChange}
             required
           />
           <input
             type="number"
-            name="amount"
+            name="price"
             placeholder="Amount"
-            value={newSale.amount}
+            value={newSale.price}
             onChange={handleChange}
             required
           />
           <input
             type="date"
-            name="date"
-            value={newSale.date}
+            name="sale_date"
+            value={newSale.sale_date}
             onChange={handleChange}
             required
           />
@@ -144,9 +147,9 @@ const Dashboard = () => {
           <tbody>
             {sales.map((sale) => (
               <tr key={sale.id}>
-                <td>{sale.product}</td>
-                <td>{sale.amount}</td>
-                <td>{new Date(sale.date).toLocaleDateString()}</td>
+                <td>{sale.product_name}</td>
+                <td>{sale.price}</td>
+                <td>{new Date(sale.sale_date).toLocaleDateString()}</td>
                 <td>{sale.region}</td>
               </tr>
             ))}
